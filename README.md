@@ -142,6 +142,6 @@ Top 3-5 BIS Standards + Reasoning
 
 ## Project Metadata
 
-- **Team:** Sigma Squad AI  
+- **Team:** WaterMelon.exe  
 - **Status:** Hackathon Submission Ready  
 - **Last Updated:** April 2026  
