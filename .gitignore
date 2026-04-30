@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyd
+.Python
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual env
+venv/
+.venv/
+env/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Local data / outputs
+qdrant_db/
+*.log
+team_results.json
+
+# Secrets
+.env
+

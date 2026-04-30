@@ -1,0 +1,8 @@
+groq
+qdrant-client
+sentence-transformers
+streamlit
+langchain-text-splitters
+pymupdf
+tqdm
+python-dotenv
