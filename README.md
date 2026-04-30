@@ -95,58 +95,53 @@ Top 3-5 BIS Standards + Reasoning
 - **Framework:** Python + Streamlit
 - **Data:** BIS SP 21 PDF (1197 standards, 1374 chunks)
 
-`markdown
 ---
 
-## Developer Operations & Troubleshooting
+## Developer Operations
 
-### 🛑 Handling Database Lock Errors
-If the system throws an `EBUSY: resource busy or locked` error, it means a background Python process or OneDrive is holding the Qdrant database.
-
-1. **Force Close Processes**:
-   ```powershell
-   # Wipe all background Python instances
-   taskkill /F /IM python.exe /T
-````
-
-2. **Clear Manual Lock**:
-   Navigate to `qdrant_db/` and delete the `.lock` file manually.
-
-3. **Storage Best Practice**:
-   Ensure the project is **not** running inside a OneDrive or Dropbox synced folder to avoid real-time file conflicts during indexing.
+- **Database Lock Handling:** Resolve `EBUSY` errors caused by active Python processes or file locks  
+- **Process Cleanup:** Terminate background Python instances using system-level commands  
+- **Manual Recovery:** Remove `.lock` files from `qdrant_db/` when required  
+- **Storage Constraint:** Avoid running inside cloud-synced directories (OneDrive/Dropbox) to prevent conflicts  
 
 ---
 
-### ⚙️ Performance Tuning
+## Performance & Optimization
 
-* **Latency Control**: To maintain the **~3.5s latency**, the system uses `Llama-3.3-70B-Specdec`. If latency spikes, verify your Groq rate limits.
-* **In-Memory Fallback**: For environments where disk I/O is restricted, the `QdrantClient` can be switched to `:memory:` in `app.py`, though this requires re-indexing on every launch.
+- **Latency:** ~3.5s average response time  
+- **Inference Engine:** Llama 3.3 70B with speculative decoding via Groq  
+- **Rate Limiting:** Dependent on Groq API limits  
+- **Fallback Mode:** Supports in-memory vector store (`QdrantClient: :memory:`) for restricted environments  
 
 ---
 
-## Model Configuration & Tuning
+## Model Configuration
 
-| Component         | Choice                   | Rationale                                                                 |
-| ----------------- | ------------------------ | ------------------------------------------------------------------------- |
-| **Embeddings**    | BGE-Small-EN-v1.5        | Optimized for technical documentation & low CPU overhead.                 |
-| **Reasoning**     | Llama 3.3 70B            | High-parameter reasoning to eliminate hallucinated IS numbers.            |
-| **Chunking**      | Semantic                 | Prevents splitting standard descriptions across multiple vectors.         |
-| **Hybrid Weight** | 0.7 Vector / 0.3 Keyword | Prioritizes semantic meaning while retaining keyword accuracy for IS IDs. |
+- **Embeddings:** BAAI/bge-small-en-v1.5 (low CPU, optimized for technical text)  
+- **Reasoning Model:** Llama 3.3 70B (reduces hallucinated IS standards)  
+- **Chunking Strategy:** Semantic chunking to preserve context  
+- **Retrieval Strategy:** Hybrid search (0.7 vector similarity / 0.3 keyword matching)  
+
+---
+
+## System Design Notes
+
+- **Vector Storage:** Local Qdrant database with optional volatile mode  
+- **Indexing Strategy:** Chunk-level embedding for standard-level retrieval  
+- **Failure Handling:** Graceful fallback for locked or restricted storage environments  
 
 ---
 
 ## Future Roadmap
 
-* [ ] **Multi-modal Support**: Direct image-to-standard mapping for construction site safety checks.
-* [ ] **Offline LLM**: Quantized Llama-3 (8B) integration for 100% air-gapped environments.
-* [ ] **Automated PDF Sync**: Direct integration with the BIS website for real-time standard updates.
+- **Multi-modal Support:** Image-to-standard mapping for safety/compliance use cases  
+- **Offline Capability:** Quantized Llama 3 (8B) for air-gapped deployments  
+- **Live Data Sync:** Automated ingestion from BIS sources for real-time updates  
 
 ---
 
-### Sigma Squad AI
+## Project Metadata
 
-**Authors:** [Your Name/Team Members]
-**Last Updated:** April 2026
-**Status:** Hackathon Submission Ready
-
-```
+- **Team:** Sigma Squad AI  
+- **Status:** Hackathon Submission Ready  
+- **Last Updated:** April 2026  
