@@ -95,3 +95,58 @@ Top 3-5 BIS Standards + Reasoning
 - **Framework:** Python + Streamlit
 - **Data:** BIS SP 21 PDF (1197 standards, 1374 chunks)
 
+`markdown
+---
+
+## Developer Operations & Troubleshooting
+
+### 🛑 Handling Database Lock Errors
+If the system throws an `EBUSY: resource busy or locked` error, it means a background Python process or OneDrive is holding the Qdrant database.
+
+1. **Force Close Processes**:
+   ```powershell
+   # Wipe all background Python instances
+   taskkill /F /IM python.exe /T
+````
+
+2. **Clear Manual Lock**:
+   Navigate to `qdrant_db/` and delete the `.lock` file manually.
+
+3. **Storage Best Practice**:
+   Ensure the project is **not** running inside a OneDrive or Dropbox synced folder to avoid real-time file conflicts during indexing.
+
+---
+
+### ⚙️ Performance Tuning
+
+* **Latency Control**: To maintain the **~3.5s latency**, the system uses `Llama-3.3-70B-Specdec`. If latency spikes, verify your Groq rate limits.
+* **In-Memory Fallback**: For environments where disk I/O is restricted, the `QdrantClient` can be switched to `:memory:` in `app.py`, though this requires re-indexing on every launch.
+
+---
+
+## Model Configuration & Tuning
+
+| Component         | Choice                   | Rationale                                                                 |
+| ----------------- | ------------------------ | ------------------------------------------------------------------------- |
+| **Embeddings**    | BGE-Small-EN-v1.5        | Optimized for technical documentation & low CPU overhead.                 |
+| **Reasoning**     | Llama 3.3 70B            | High-parameter reasoning to eliminate hallucinated IS numbers.            |
+| **Chunking**      | Semantic                 | Prevents splitting standard descriptions across multiple vectors.         |
+| **Hybrid Weight** | 0.7 Vector / 0.3 Keyword | Prioritizes semantic meaning while retaining keyword accuracy for IS IDs. |
+
+---
+
+## Future Roadmap
+
+* [ ] **Multi-modal Support**: Direct image-to-standard mapping for construction site safety checks.
+* [ ] **Offline LLM**: Quantized Llama-3 (8B) integration for 100% air-gapped environments.
+* [ ] **Automated PDF Sync**: Direct integration with the BIS website for real-time standard updates.
+
+---
+
+### Sigma Squad AI
+
+**Authors:** [Your Name/Team Members]
+**Last Updated:** April 2026
+**Status:** Hackathon Submission Ready
+
+```
