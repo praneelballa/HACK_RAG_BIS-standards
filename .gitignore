@@ -18,9 +18,11 @@ Thumbs.db
 .vscode/
 
 # Local data / outputs
-qdrant_db/
 *.log
 team_results.json
+
+# Streamlit local config / secrets
+.streamlit/
 
 # Secrets
 .env

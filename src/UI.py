@@ -739,6 +739,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
+
 # Search Panel
 st.markdown("""
 <div class="search-panel">
@@ -765,55 +766,58 @@ if search_clicked:
         with st.spinner("◈ SYNCHRONIZING WITH VECTOR DATABASE · REASONING WITH NEURAL ENGINE..."):
             try:
                 start = time.time()
-                response_str = ask_bis(query)
+                
+                # 1. Fetch data
+                results = ask_bis(query) 
                 elapsed = round(time.time() - start, 2)
 
-                if isinstance(response_str, str):
-                    results = json.loads(response_str)
-                else:
-                    results = response_str
+                # 2. Type Check & Formatting
+                if isinstance(results, str):
+                    results = json.loads(results)
 
-                # Results header
-                st.markdown(f"""
-                <div class="results-header">
-                    <span class="results-count">{len(results)}</span>
-                    STANDARDS IDENTIFIED
-                    <span style="margin-left:auto; font-size:12px; color: rgba(148,163,184,0.5);">
-                        ⏱ {elapsed}s · QUERY COMPLETE
-                    </span>
-                </div>
-                """, unsafe_allow_html=True)
-
-                # Results grid
-                st.markdown('<div class="results-grid">', unsafe_allow_html=True)
-
-                rank_labels = ["◈ PRIMARY MATCH", "◈ SECONDARY MATCH", "◈ TERTIARY MATCH",
-                               "◈ MATCH #4", "◈ MATCH #5"]
-                tag_colors = ["var(--cyan)", "var(--purple)", "var(--pink)", "var(--blue)", "var(--green)"]
-
-                for i, res in enumerate(results):
-                    rank = rank_labels[i] if i < len(rank_labels) else f"◈ MATCH #{i+1}"
-                    is_num = res.get('is_number', 'N/A')
-                    reasoning = res.get('reasoning', 'No reasoning provided.')
-                    category = "BUILDING MATERIALS"
-
+                if results:
+                    # Results header
                     st.markdown(f"""
-                    <div class="result-card">
-                        <div class="result-rank">{rank}</div>
-                        <div class="result-is-number">{is_num}</div>
-                        <div class="result-divider"></div>
-                        <p class="result-reasoning">{reasoning}</p>
-                        <div class="result-footer">
-                            <span class="result-tag">BIS STANDARD</span>
-                            <span class="result-tag">{category}</span>
-                        </div>
+                    <div class="results-header">
+                        <span class="results-count">{len(results)}</span> STANDARDS IDENTIFIED
+                        <span style="margin-left:auto; font-size:12px; color: rgba(148,163,184,0.5);">⏱ {elapsed}s · QUERY COMPLETE</span>
                     </div>
                     """, unsafe_allow_html=True)
 
-                st.markdown('</div>', unsafe_allow_html=True)
+                    # Results grid
+                    st.markdown('<div class="results-grid">', unsafe_allow_html=True)
 
+                    rank_labels = ["◈ PRIMARY MATCH", "◈ SECONDARY MATCH", "◈ TERTIARY MATCH", "◈ MATCH #4", "◈ MATCH #5"]
+
+                    for i, res in enumerate(results):
+                        rank = rank_labels[i] if i < len(rank_labels) else f"◈ MATCH #{i+1}"
+                        is_num = res.get('is_number', 'N/A')
+                        reasoning = res.get('reasoning', 'No reasoning provided.')
+                        category = "BUILDING MATERIALS"
+
+                        st.markdown(f"""
+                        <div class="result-card">
+                            <div class="result-rank">{rank}</div>
+                            <div class="result-is-number">{is_num}</div>
+                            <div class="result-divider"></div>
+                            <p class="result-reasoning">{reasoning}</p>
+                            <div class="result-footer">
+                                <span class="result-tag">BIS STANDARD</span>
+                                <span class="result-tag">{category}</span>
+                            </div>
+                        </div>
+                        """, unsafe_allow_html=True)
+
+                    st.markdown('</div>', unsafe_allow_html=True)
+                else:
+                    st.info("◈ NO MATCHES — Neural engine could not find relevant standards.")
+                    
             except Exception as e:
-                st.error(f"⚠ SYSTEM ERROR: {e}")
+                msg = str(e)
+                if "Missing GROQ_API_KEY" in msg:
+                    st.error("⚠ SYSTEM ERROR: Missing GROQ_API_KEY. Please set your environment variables.")
+                else:
+                    st.error(f"⚠ SYSTEM ERROR: {e}")
     else:
         st.warning("◈ INPUT REQUIRED — Please enter a query to initialize search.")
 

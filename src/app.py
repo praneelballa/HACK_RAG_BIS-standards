@@ -4,20 +4,89 @@ from qdrant_client import QdrantClient
 from sentence_transformers import SentenceTransformer
 from dotenv import load_dotenv
 import os
+from pathlib import Path
+import tomllib
 
 # --- CONFIG ---
 load_dotenv()
-GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 COLLECTION_NAME = "bis_standards"
 
-# Initialize Clients
-groq_client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
-qdrant = QdrantClient(path="qdrant_db")
-embed_model = SentenceTransformer('BAAI/bge-small-en-v1.5')
+_groq_client = None
+_groq_client_key = None
+_qdrant = None
+_embed_model = None
+
+
+def _get_groq_api_key() -> str | None:
+    key = os.environ.get("GROQ_API_KEY")
+    if key:
+        return key
+
+    # When running under Streamlit, allow `.streamlit/secrets.toml` as source of truth.
+    try:
+        import streamlit as st  # type: ignore
+
+        try:
+            secret_val = st.secrets["GROQ_API_KEY"]
+        except Exception:
+            secret_val = None
+
+        if secret_val:
+            return str(secret_val)
+    except Exception:
+        pass
+
+    # Fallback: parse `.streamlit/secrets.toml` directly (works even if Streamlit secrets
+    # integration isn't available for some reason).
+    try:
+        secrets_path = Path(__file__).resolve().parent / ".streamlit" / "secrets.toml"
+        if secrets_path.exists():
+            data = tomllib.loads(secrets_path.read_text(encoding="utf-8"))
+            val = data.get("GROQ_API_KEY")
+            if val:
+                return str(val)
+    except Exception:
+        pass
+
+    return None
+
+
+def _get_groq_client() -> Groq:
+    global _groq_client, _groq_client_key
+
+    api_key = _get_groq_api_key()
+    if not api_key:
+        raise RuntimeError(
+            "Missing GROQ_API_KEY. Set it as an environment variable, in a .env file, "
+            "or in .streamlit/secrets.toml."
+        )
+
+    if _groq_client is None or _groq_client_key != api_key:
+        _groq_client = Groq(api_key=api_key)
+        _groq_client_key = api_key
+
+    return _groq_client
+
+
+def _get_qdrant() -> QdrantClient:
+    global _qdrant
+    if _qdrant is None:
+        # Adding a timeout or preferred connection method can help
+        _qdrant = QdrantClient(path="qdrant_db", prefer_grpc=False)
+    return _qdrant
+
+
+def _get_embed_model() -> SentenceTransformer:
+    global _embed_model
+    if _embed_model is None:
+        _embed_model = SentenceTransformer("BAAI/bge-small-en-v1.5")
+    return _embed_model
+
 
 def ask_bis(query):
-    if not groq_client:
-        raise RuntimeError("Missing GROQ_API_KEY. Set it in your environment (or in a .env file).")
+    groq_client = _get_groq_client()
+    qdrant = _get_qdrant()
+    embed_model = _get_embed_model()
     # 1. RETRIEVAL
     vector = embed_model.encode(query).tolist()
     search_results = qdrant.query_points(
@@ -88,4 +157,4 @@ if __name__ == "__main__":
         print("\n--- FINAL JSON OUTPUT ---")
         print(result)
     except Exception as e:
-        print(f"❌ Run failed: {e}")
+        print(f"❌ Run failed: {e}")    
