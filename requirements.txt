@@ -2,6 +2,7 @@
 groq
 qdrant-client
 sentence-transformers
+scikit-learn
 langchain-text-splitters
 fastembed
 tiktoken
